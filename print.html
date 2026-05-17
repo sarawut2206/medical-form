@@ -219,15 +219,10 @@ async function buildPdf(row) {
     if (s.match(/^\d{4}-\d{2}-\d{2}T/)) return "";
     return s;
   }
-  const soi  = str(row["ซอย"]);
-  const road = str(row["ถนน"]);
   const tambon = str(row["ตำบล/แขวง"]);
   const amphoe = str(row["อำเภอ/เขต"]);
   const addrTokens = [
     str(row["บ้านเลขที่"]) ? "บ้านเลขที่ "+str(row["บ้านเลขที่"]) : "",
-    str(row["หมู่บ้าน"]),
-    soi  ? (soi.startsWith("ซ.")||soi.startsWith("ซอย")   ? soi  : "ซ."+soi)   : "",
-    road ? (road.startsWith("ถ.")||road.startsWith("ถนน")  ? road : "ถ."+road)  : "",
     tambon  ? (tambon.startsWith("แขวง")||tambon.startsWith("ต.")   ? tambon  : "แขวง"+tambon)  : "",
     amphoe  ? (amphoe.startsWith("เขต")||amphoe.startsWith("อ.")    ? amphoe  : "เขต"+amphoe)   : "",
     str(row["จังหวัด"]),

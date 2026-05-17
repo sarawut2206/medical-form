@@ -169,13 +169,13 @@ function renderTable(rows) {
 
 // ===== สร้างและปริ้น PDF =====
 function splitAddr(tokens, maxChars) {
-  const lines = ["",""];
+  const lines = Array(maxChars.length).fill("");
   let li = 0;
-  for (const t of tokens) {
-    if (li >= 2) break;
-    const c = lines[li] ? lines[li]+" "+t : t;
-    if (c.length <= maxChars[li]) lines[li] = c;
-    else { li++; if(li<2) lines[li]=t; }
+  for (const tok of tokens) {
+    if (li >= maxChars.length) break;
+    const c = lines[li] ? lines[li]+" "+tok : tok;
+    if (c.length <= maxChars[li]) { lines[li] = c; }
+    else { li++; if (li < maxChars.length) lines[li] = tok; }
   }
   return lines;
 }
@@ -220,7 +220,8 @@ async function buildPdf(row) {
     str(row["จังหวัด"]),
     str(row["รหัสไปรษณีย์"])
   ].filter(Boolean);
-  const [pL1, pL2] = splitAddr(addrTokens, [18, 48]);
+  // 3 บรรทัด: y=251 (~55 ตัว), y=272 (~55 ตัว), y=293 (ครึ่งซ้าย ~48 ตัว)
+  const [pL1, pL2, pL3] = splitAddr(addrTokens, [55, 55, 48]);
 
   const name = str(row["ชื่อ-นามสกุล"]);
 
@@ -232,9 +233,10 @@ async function buildPdf(row) {
   t(380,209, cL1);
   t(71, 230, cL2);          t(458,230, CLINIC.clinic_phone);
   t(205,251, name);         t(487,251, str(row["อายุ"]));
+  t(71, 251, pL1);                                            // ที่อยู่บรรทัด 1
   t(191,272, str(row["เลขบัตรประชาชน"]));
-  t(418,272, pL1);
-  t(71, 293, pL2);          t(462,293, str(row["โทรศัพท์"]));
+  t(71, 272, pL2);                                            // ที่อยู่บรรทัด 2
+  t(71, 293, pL3);          t(462,293, str(row["โทรศัพท์"]));// ที่อยู่บรรทัด 3
   t(177,314, CLINIC.exam_day); t(222,314, CLINIC.exam_month); t(304,314, CLINIC.exam_year);
   t(210,345, name);
   t(330,682, CLINIC.doctor_sign_name);

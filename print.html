@@ -145,8 +145,14 @@ function renderTable(rows) {
   const tbody = document.getElementById("tbody");
   tbody.innerHTML = "";
   rows.forEach((r, i) => {
+    function ds(v) {
+      if (!v && v !== 0) return "";
+      const s = String(v).trim();
+      if (s.match(/^\d{4}-\d{2}-\d{2}T/)) return "";
+      return s;
+    }
     const addr = [r["บ้านเลขที่"], r["ซอย"], r["ถนน"], r["ตำบล/แขวง"], r["อำเภอ/เขต"], r["จังหวัด"], r["รหัสไปรษณีย์"]]
-      .filter(Boolean).join(" ");
+      .map(ds).filter(Boolean).join(" ");
     tbody.innerHTML += `
       <tr>
         <td><span class="badge-num">${r["ลำดับ"]||i+1}</span></td>
@@ -194,15 +200,29 @@ async function buildPdf(row) {
   const [cL1, cL2] = splitAddr(cTokens, [28, 60]);
 
   // ที่อยู่ผู้ป่วย (word-wrap)
+  // แปลงทุก field เป็น string ก่อน (ป้องกัน Google Sheet แปลงเป็น number/date)
+  function str(v) { 
+    if (!v && v !== 0) return "";
+    const s = String(v).trim();
+    // ถ้าเป็น ISO date format ให้ return ""
+    if (s.match(/^\d{4}-\d{2}-\d{2}T/)) return "";
+    return s;
+  }
+  const soi = str(row["ซอย"]);
+  const road = str(row["ถนน"]);
   const addrTokens = [
-    row["บ้านเลขที่"], row["หมู่บ้าน"],
-    row["ซอย"] ? (row["ซอย"].startsWith("ซ.")?row["ซอย"]:"ซ."+row["ซอย"]) : "",
-    row["ถนน"] ? (row["ถนน"].startsWith("ถ.")?row["ถนน"]:"ถ."+row["ถนน"]) : "",
-    row["ตำบล/แขวง"], row["อำเภอ/เขต"], row["จังหวัด"], row["รหัสไปรษณีย์"]
+    str(row["บ้านเลขที่"]),
+    str(row["หมู่บ้าน"]),
+    soi ? (soi.startsWith("ซ.")||soi.startsWith("ซอย") ? soi : "ซ."+soi) : "",
+    road ? (road.startsWith("ถ.")||road.startsWith("ถนน") ? road : "ถ."+road) : "",
+    str(row["ตำบล/แขวง"]),
+    str(row["อำเภอ/เขต"]),
+    str(row["จังหวัด"]),
+    str(row["รหัสไปรษณีย์"])
   ].filter(Boolean);
   const [pL1, pL2] = splitAddr(addrTokens, [18, 48]);
 
-  const name = row["ชื่อ-นามสกุล"] || "";
+  const name = str(row["ชื่อ-นามสกุล"]);
 
   // กรอกข้อมูล
   t(393,119, CLINIC.place);
@@ -211,10 +231,10 @@ async function buildPdf(row) {
   t(263,188, CLINIC.license_no);
   t(380,209, cL1);
   t(71, 230, cL2);          t(458,230, CLINIC.clinic_phone);
-  t(205,251, name);         t(487,251, row["อายุ"]||"");
-  t(191,272, row["เลขบัตรประชาชน"]||"");
+  t(205,251, name);         t(487,251, str(row["อายุ"]);
+  t(191,272, str(row["เลขบัตรประชาชน"]);
   t(418,272, pL1);
-  t(71, 293, pL2);          t(462,293, row["โทรศัพท์"]||"");
+  t(71, 293, pL2);          t(462,293, str(row["โทรศัพท์"]);
   t(177,314, CLINIC.exam_day); t(222,314, CLINIC.exam_month); t(304,314, CLINIC.exam_year);
   t(210,345, name);
   t(330,682, CLINIC.doctor_sign_name);

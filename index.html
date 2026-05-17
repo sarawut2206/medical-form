@@ -45,14 +45,9 @@ h1{color:#fff;font-size:24px;font-weight:800;margin-bottom:6px}
 <body>
 <div class="wrap">
   <div class="head">
-    <div class="badge">🏥 มาเจริญคลินิกเวชกรรม</div>
+    <div class="badge">🎖️ งานนักศึกษาวิชาทหาร</div>
     <h1>กรอกข้อมูลใบรับรองแพทย์</h1>
     <p class="sub">กรอกข้อมูลแล้วกด "ส่งให้ครู" — ครูจะปริ้นให้</p>
-  </div>
-
-  <div class="info">
-    <strong>แพทย์ผู้ตรวจ:</strong> นายแพทย์พงษ์พิชิต กนิษฐานนท์ &nbsp;|&nbsp; ใบอนุญาต: ว.5215<br>
-    <strong>วันที่ตรวจ:</strong> 25 พฤษภาคม 2569 &nbsp;|&nbsp; มาเจริญคลินิกเวชกรรม
   </div>
 
   <div class="card">
@@ -68,13 +63,13 @@ h1{color:#fff;font-size:24px;font-weight:800;margin-bottom:6px}
         <input id="age" type="number" placeholder="18" min="1" max="99">
       </div>
       <div class="f">
-        <label>โทรศัพท์ <span class="opt">(ไม่บังคับ)</span></label>
-        <input id="patient_phone" class="soft" placeholder="08x-xxx-xxxx">
+        <label>โทรศัพท์ 10 หลัก <span class="req">*</span></label>
+        <input id="patient_phone" class="soft" placeholder="08xxxxxxxx" maxlength="10" inputmode="numeric">
       </div>
     </div>
     <div class="f">
       <label>เลขบัตรประชาชน 13 หลัก <span class="req">*</span></label>
-      <input id="id_card" placeholder="1-xxxx-xxxxx-xx-x" maxlength="20">
+      <input id="id_card" placeholder="1xxxxxxxxxxxx" maxlength="13" inputmode="numeric">
     </div>
 
     <div class="addr-section">
@@ -105,7 +100,7 @@ h1{color:#fff;font-size:24px;font-weight:800;margin-bottom:6px}
     <button class="btn btn-main" id="sendbtn" onclick="sendData()">📤 ส่งข้อมูลให้ครู</button>
   </div>
 
-  <p class="foot">แพทย์ผู้ตรวจ: นายแพทย์พงษ์พิชิต กนิษฐานนท์ · วันที่ตรวจ: 25 พฤษภาคม 2569</p>
+  <p class="foot">งานนักศึกษาวิชาทหาร</p>
 </div>
 
 <script>
@@ -135,6 +130,10 @@ async function sendData(){
   if(!name){ showErr("กรุณากรอกชื่อ-นามสกุล"); return; }
   if(!age){  showErr("กรุณากรอกอายุ"); return; }
   if(!idc){  showErr("กรุณากรอกเลขบัตรประชาชน"); return; }
+  if(!/^\d{13}$/.test(idc)){ showErr("เลขบัตรประชาชนต้องเป็นตัวเลข 13 หลักเท่านั้น"); return; }
+  const phone = v("patient_phone").trim();
+  if(!phone){ showErr("กรุณากรอกเบอร์โทรศัพท์"); return; }
+  if(!/^\d{10}$/.test(phone)){ showErr("เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 หลักเท่านั้น"); return; }
   if(!SHEET_API_URL){ showErr("ยังไม่ได้ตั้งค่า — กรุณาแจ้งครู"); return; }
 
   const btn = document.getElementById("sendbtn");

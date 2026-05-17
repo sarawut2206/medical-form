@@ -169,13 +169,24 @@ function renderTable(rows) {
 
 // ===== สร้างและปริ้น PDF =====
 function splitAddr(tokens, maxChars) {
-  const lines = Array(maxChars.length).fill("");
-  let li = 0;
-  for (const tok of tokens) {
-    if (li >= maxChars.length) break;
-    const c = lines[li] ? lines[li]+" "+tok : tok;
-    if (c.length <= maxChars[li]) { lines[li] = c; }
-    else { li++; if (li < maxChars.length) lines[li] = tok; }
+  // รวมเป็น string เดียวก่อน แล้วค่อยตัดตาม maxChars ทีละบรรทัด
+  const full = tokens.join(" ");
+  const lines = [];
+  let pos = 0;
+  for (let i = 0; i < maxChars.length; i++) {
+    if (pos >= full.length) { lines.push(""); continue; }
+    const chunk = full.slice(pos, pos + maxChars[i]);
+    // ถ้ายังไม่จบ ให้ตัดที่ช่องว่างสุดท้ายเพื่อไม่ตัดกลางคำ
+    if (pos + maxChars[i] < full.length) {
+      const cut = chunk.lastIndexOf(" ");
+      if (cut > 0) {
+        lines.push(full.slice(pos, pos + cut).trimEnd());
+        pos += cut + 1;
+        continue;
+      }
+    }
+    lines.push(chunk.trimEnd());
+    pos += maxChars[i];
   }
   return lines;
 }
@@ -208,20 +219,22 @@ async function buildPdf(row) {
     if (s.match(/^\d{4}-\d{2}-\d{2}T/)) return "";
     return s;
   }
-  const soi = str(row["ซอย"]);
+  const soi  = str(row["ซอย"]);
   const road = str(row["ถนน"]);
+  const tambon = str(row["ตำบล/แขวง"]);
+  const amphoe = str(row["อำเภอ/เขต"]);
   const addrTokens = [
-    str(row["บ้านเลขที่"]),
+    str(row["บ้านเลขที่"]) ? "บ้านเลขที่ "+str(row["บ้านเลขที่"]) : "",
     str(row["หมู่บ้าน"]),
-    soi ? (soi.startsWith("ซ.")||soi.startsWith("ซอย") ? soi : "ซ."+soi) : "",
-    road ? (road.startsWith("ถ.")||road.startsWith("ถนน") ? road : "ถ."+road) : "",
-    str(row["ตำบล/แขวง"]),
-    str(row["อำเภอ/เขต"]),
+    soi  ? (soi.startsWith("ซ.")||soi.startsWith("ซอย")   ? soi  : "ซ."+soi)   : "",
+    road ? (road.startsWith("ถ.")||road.startsWith("ถนน")  ? road : "ถ."+road)  : "",
+    tambon  ? (tambon.startsWith("แขวง")||tambon.startsWith("ต.")   ? tambon  : "แขวง"+tambon)  : "",
+    amphoe  ? (amphoe.startsWith("เขต")||amphoe.startsWith("อ.")    ? amphoe  : "เขต"+amphoe)   : "",
     str(row["จังหวัด"]),
     str(row["รหัสไปรษณีย์"])
   ].filter(Boolean);
-  // ที่อยู่: บรรทัด 1 หลัง label "ที่อยู่" x≈340 y=272 (~20 ตัว), บรรทัด 2 เต็มบรรทัด x=71 y=293 (~48 ตัว)
-  const [pL1, pL2] = splitAddr(addrTokens, [20, 48]);
+  // ที่อยู่: บรรทัด 1 หลัง label "ที่อยู่" x≈415 y=272 (~20 ตัว), บรรทัด 2 เต็มบรรทัด x=71 y=293 (~52 ตัว)
+  const [pL1, pL2] = splitAddr(addrTokens, [20, 52]);
 
   const name = str(row["ชื่อ-นามสกุล"]);
 
